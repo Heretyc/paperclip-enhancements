@@ -1,0 +1,52 @@
+services:
+  cognee:
+    image: paperclip-cognee-local:1.6.5-mcp0.5.7
+    build: .
+    restart: unless-stopped
+    init: true
+    ports:
+      - "127.0.0.1:${COGNEE_HOST_PORT:-8001}:8000"
+    environment:
+      TRANSPORT_MODE: http
+      HTTP_PORT: "8000"
+      MCP_ALLOWED_HOSTS: "cognee:*,localhost:*,127.0.0.1:*"
+      COGNEE_MCP_TOOL_MODE: all
+      COGNEE_MCP_AGENT_SCOPED: "true"
+      ENABLE_BACKEND_ACCESS_CONTROL: "false"
+      REQUIRE_AUTHENTICATION: "false"
+      GRAPH_EXTRACTOR: gliner_demo
+      GLINER_AUTO_INSTALL: "false"
+      GLINER_INFERENCE_THREADS: "1"
+      EMBEDDING_PROVIDER: fastembed
+      EMBEDDING_MODEL: BAAI/bge-small-en-v1.5
+      EMBEDDING_DIMENSIONS: "384"
+      HF_HOME: /cognee-storage/cache/huggingface
+      FASTEMBED_CACHE_PATH: /cognee-storage/cache/fastembed
+      TOKENIZERS_PARALLELISM: "false"
+      OMP_NUM_THREADS: "2"
+      KUZU_NUM_THREADS: "2"
+      KUZU_BUFFER_POOL_SIZE: "268435456"
+      TELEMETRY_DISABLED: "true"
+      AUTO_FEEDBACK: "false"
+      ACCEPT_LOCAL_FILE_PATH: "true"
+      COGNEE_ALLOWED_LOCAL_FILE_ROOTS: /cognee-storage/data
+    volumes:
+      - cognee_storage:/cognee-storage
+    mem_limit: 6g
+    cpus: 2.0
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    labels:
+      - traefik.enable=false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
+
+volumes:
+  cognee_storage:
