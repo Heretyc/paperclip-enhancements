@@ -1,0 +1,9 @@
+.secrets/
+.env
+*.local.*
+__pycache__/
+*.pyc
+state/
+backups/
+verification*.json
+installed-packages.txt

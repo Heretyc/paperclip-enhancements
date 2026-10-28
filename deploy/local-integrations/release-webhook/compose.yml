@@ -1,0 +1,42 @@
+services:
+  release-watcher:
+    image: paperclip-release-watcher:1.0.0
+    build: .
+    restart: unless-stopped
+    init: true
+    read_only: true
+    user: "1000:1000"
+    environment:
+      POLL_INTERVAL_SECONDS: "900"
+      WEBHOOK_URL: ${PAPERCLIP_RELEASE_WEBHOOK_URL:?Set the routine webhook URL}
+    volumes:
+      - release_watcher_state:/state
+    secrets:
+      - release_webhook_secret
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 32
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    labels:
+      - traefik.enable=false
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+    healthcheck:
+      test: ["CMD", "python", "/app/watcher.py", "--health"]
+      interval: 60s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+volumes:
+  release_watcher_state:
+
+secrets:
+  release_webhook_secret:
+    file: ${PAPERCLIP_RELEASE_SECRET_FILE:?Set the local secret file path}
